@@ -11,4 +11,4 @@ It is permitted by TA quote "you're allowed to collaborate on making more test c
 2. Insert module
 3. Make device
 4. Compile this test script - gcc customTests.c -o customTests
-5. Run ./customTests.c
+5. Run ./customTests
