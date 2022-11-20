@@ -13,7 +13,7 @@ bool addValues(int fd){
 	char buffer[BUFFER_SIZE];
 
 	for(int i=0; i<1000; i++){
-		sprintf(buffer, "%d",i);
+		sprintf(buffer, "%d\n",i);
 		writeCount = write(fd, buffer,strlen(buffer));
 		if(writeCount<0){
 			printf("!!Failed writing string %s to device\n", buffer);
