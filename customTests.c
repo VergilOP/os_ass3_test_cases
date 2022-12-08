@@ -57,7 +57,22 @@ void *addValues_1(void *arg){
 	int fd = *(int*) arg;
 	int writeCount;
 	char buffer[BUFFER_SIZE];
-	for(int i=0; i<1000; i++){
+	for(int i=0; i<100; i++){
+		sprintf(buffer, "%d\n",i);
+		writeCount = write(fd, buffer,strlen(buffer));
+		if(writeCount<0){
+			printf("!!Failed writing string %s to device\n", buffer);
+			close(fd);
+			break;
+		}
+	}
+}
+
+void *addValues_2(void *arg){
+	int fd = *(int*) arg;
+	int writeCount;
+	char buffer[BUFFER_SIZE];
+	for(int i=100; i<200; i++){
 		sprintf(buffer, "%d\n",i);
 		writeCount = write(fd, buffer,strlen(buffer));
 		if(writeCount<0){
@@ -72,7 +87,7 @@ void *readValues_1(void *arg){
 	int fd = *(int*) arg;
 	int readCount;
 	char recieve[BUFFER_SIZE];
-	for(int i=0;i<1000; i++){
+	for(int i=0;i<100; i++){
 		readCount = read(fd, recieve, BUFFER_SIZE);
 		recieve[readCount]='\0';
 
@@ -85,10 +100,11 @@ void *readValues_1(void *arg){
 	}	
 }
 
+
 bool readValues_2(int fd){	
 	int readCount;
 	char recieve[BUFFER_SIZE];
-	for(int i=0;i<1000; i++){
+	for(int i=0;i<200; i++){
 		readCount = read(fd, recieve, BUFFER_SIZE);
 		recieve[readCount]='\0';
 
@@ -97,18 +113,28 @@ bool readValues_2(int fd){
 			perror("Reading part 3 failed");
 			close(fd);
 			return false;
-			
-		}else{
-
-			if(999==atoi(recieve)){
-				printf("Found 999.\n");
-				return true;
-			} 
-	        
 		}
+		
 	}
 
 	return true;	
+}
+
+void *readValues_3(void *arg){
+	int fd = *(int*) arg;
+	int readCount;
+	char recieve[BUFFER_SIZE];
+	for(int i=100;i<200; i++){
+		readCount = read(fd, recieve, BUFFER_SIZE);
+		recieve[readCount]='\0';
+
+		if(readCount < 0){
+			printf("!!Failed reading from device\n");
+			perror("Reading part 3 failed");
+			close(fd);	
+			break;		
+		}
+	}	
 }
 
 int main(){
@@ -149,11 +175,13 @@ int main(){
 	int *arg = malloc(sizeof(*arg));
 	*arg = fd;
 	
-	pthread_t threads[2];
+	pthread_t threads[4];
 	pthread_create(&threads[0], NULL, (void *) addValues_1, arg);
-	pthread_create(&threads[1], NULL, (void *) readValues_1, arg);
+	pthread_create(&threads[1], NULL, (void *) addValues_2, arg);
+	pthread_create(&threads[2], NULL, (void *) readValues_1, arg);
+	pthread_create(&threads[3], NULL, (void *) readValues_3, arg);
 	
-	for (int i = 0; i < 2; i++) {
+	for (int i = 0; i < 4; i++) {
     		pthread_join(threads[i], NULL);
   	}
 	
