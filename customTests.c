@@ -13,7 +13,7 @@ bool addValues(int fd){
 	int writeCount;
 	char buffer[BUFFER_SIZE];
 	for(int i=0; i<10; i++){
-		sprintf(buffer, "%d\n",i);
+		sprintf(buffer, "%d",i);
 		writeCount = write(fd, buffer,strlen(buffer));
 		if(writeCount<0){
 			printf("!!Failed writing string %s to device\n", buffer);
@@ -57,8 +57,8 @@ void *addValues_1(void *arg){
 	int fd = *(int*) arg;
 	int writeCount;
 	char buffer[BUFFER_SIZE];
-	for(int i=0; i<100; i++){
-		sprintf(buffer, "%d\n",i);
+	for(int i=0; i<500; i++){
+		sprintf(buffer, "%d",i);
 		writeCount = write(fd, buffer,strlen(buffer));
 		if(writeCount<0){
 			printf("!!Failed writing string %s to device\n", buffer);
@@ -72,8 +72,8 @@ void *addValues_2(void *arg){
 	int fd = *(int*) arg;
 	int writeCount;
 	char buffer[BUFFER_SIZE];
-	for(int i=100; i<200; i++){
-		sprintf(buffer, "%d\n",i);
+	for(int i=500; i<1000; i++){
+		sprintf(buffer, "%d",i);
 		writeCount = write(fd, buffer,strlen(buffer));
 		if(writeCount<0){
 			printf("!!Failed writing string %s to device\n", buffer);
@@ -83,11 +83,51 @@ void *addValues_2(void *arg){
 	}
 }
 
+bool addValues_3(int fd){
+	int writeCount;
+	char buffer[BUFFER_SIZE];
+	for(int i=0; i<1001; i++){
+		sprintf(buffer, "%d",i);
+		writeCount = write(fd, buffer,strlen(buffer));
+	}
+
+	return true;
+}
+
+bool addValues_4(int fd){
+	int writeCount;
+	char buffer[BUFFER_SIZE+1];
+	int readCount;
+	char recieve[BUFFER_SIZE];
+	
+	char str_1[BUFFER_SIZE] = "";
+	char str_2[BUFFER_SIZE+1] = "";
+	
+	for(int i=0;i<4*1024-1;i++){
+		strcat(str_1,"a");
+		strcat(str_2,"b");
+	}
+	strcat(str_2,"b");
+	
+	sprintf(buffer, "%s",str_1);
+	writeCount = write(fd, buffer,strlen(buffer)-1);
+	
+	sprintf(buffer, "%s",str_2);
+	writeCount = write(fd, buffer,strlen(buffer));
+	
+	readCount = read(fd, recieve, BUFFER_SIZE);
+	recieve[readCount]='\0';
+	
+	readCount = read(fd, recieve, BUFFER_SIZE);
+	recieve[readCount]='\0';
+	return true;
+}
+
 void *readValues_1(void *arg){
 	int fd = *(int*) arg;
 	int readCount;
 	char recieve[BUFFER_SIZE];
-	for(int i=0;i<100; i++){
+	for(int i=0;i<500; i++){
 		readCount = read(fd, recieve, BUFFER_SIZE);
 		recieve[readCount]='\0';
 
@@ -104,15 +144,22 @@ void *readValues_1(void *arg){
 bool readValues_2(int fd){	
 	int readCount;
 	char recieve[BUFFER_SIZE];
-	for(int i=0;i<200; i++){
+	for(int i=0;i<1000; i++){
 		readCount = read(fd, recieve, BUFFER_SIZE);
 		recieve[readCount]='\0';
 
 		if(readCount < 0){
 			printf("!!Failed reading from device\n");
-			perror("Reading part 3 failed");
+			perror("Clear failed");
 			close(fd);
 			return false;
+		}else{
+
+			if(recieve == ""){
+				printf("Reach the end.\n");
+				return true;
+			} 
+	        
 		}
 		
 	}
@@ -124,17 +171,35 @@ void *readValues_3(void *arg){
 	int fd = *(int*) arg;
 	int readCount;
 	char recieve[BUFFER_SIZE];
-	for(int i=100;i<200; i++){
+	for(int i=500;i<1000; i++){
 		readCount = read(fd, recieve, BUFFER_SIZE);
 		recieve[readCount]='\0';
 
 		if(readCount < 0){
 			printf("!!Failed reading from device\n");
-			perror("Reading part 3 failed");
+			perror("Reading part 4 failed");
 			close(fd);	
 			break;		
 		}
 	}	
+}
+
+bool readValues_4(int fd){	
+	int readCount;
+	char recieve[BUFFER_SIZE];
+	for(int i=0;i<1001; i++){
+		readCount = read(fd, recieve, BUFFER_SIZE);
+		recieve[readCount]='\0';
+
+		if(readCount < 0){
+			printf("!!Failed reading from device\n");
+			perror("Reading part 5 failed");
+			close(fd);
+			return false;
+		}
+	}
+
+	return true;	
 }
 
 int main(){
@@ -190,8 +255,27 @@ int main(){
 	printf("*****Clean Start*****\n");
 	success = readValues_2(fd);
 	if(!success) return -1;
-	close(fd);
-	printf("*****Clean Complete*****\n");
+	printf("*****Clean Complete*****\n\n");
 	
+	printf("*****Part Five*****\n");
+	printf("Writing and Reading 1001(length of list)\n");
+	
+	success = addValues_3(fd);
+	if(!success) return -1;
+	
+	success = readValues_4(fd);
+	if(!success) return -1;
+	
+	printf("***Part Five Complete***\n\n");
+	
+	printf("*****Part Six*****\n");
+	printf("Message less than 4kb\n");
+	
+	success = addValues_4(fd);
+	if(!success) return -1;
+	
+	printf("***Part Six Complete***\n\n");
+	
+	close(fd);
     return 0;
 }
