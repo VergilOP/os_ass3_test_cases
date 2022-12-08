@@ -7,15 +7,12 @@
 #include <stdbool.h>
 #include <pthread.h>
 
-pthread_rwlock_t lock = PTHREAD_RWLOCK_INITIALIZER;
-
 #define BUFFER_SIZE 4096
 
 bool addValues(int fd){
 	int writeCount;
 	char buffer[BUFFER_SIZE];
-	printf("[write] value of fd is %d\n", fd);
-	for(int i=0; i<100; i++){
+	for(int i=0; i<10; i++){
 		sprintf(buffer, "%d\n",i);
 		writeCount = write(fd, buffer,strlen(buffer));
 		if(writeCount<0){
@@ -33,8 +30,7 @@ bool addValues(int fd){
 bool readValues(int fd){	
 	int readCount;
 	char recieve[BUFFER_SIZE];
-	printf("[read] value of fd is %d\n", fd);
-	for(int i=0;i<100; i++){
+	for(int i=0;i<10; i++){
 		readCount = read(fd, recieve, BUFFER_SIZE);
 		recieve[readCount]='\0';
 
@@ -61,8 +57,7 @@ void *addValues_1(void *arg){
 	int fd = *(int*) arg;
 	int writeCount;
 	char buffer[BUFFER_SIZE];
-	printf("[write] value of fd is %d\n", fd);
-	for(int i=0; i<10; i++){
+	for(int i=0; i<1000; i++){
 		sprintf(buffer, "%d\n",i);
 		writeCount = write(fd, buffer,strlen(buffer));
 		if(writeCount<0){
@@ -77,8 +72,7 @@ void *readValues_1(void *arg){
 	int fd = *(int*) arg;
 	int readCount;
 	char recieve[BUFFER_SIZE];
-	printf("[read] value of fd is %d\n", fd);
-	for(int i=0;i<10; i++){
+	for(int i=0;i<1000; i++){
 		readCount = read(fd, recieve, BUFFER_SIZE);
 		recieve[readCount]='\0';
 
@@ -91,6 +85,32 @@ void *readValues_1(void *arg){
 	}	
 }
 
+bool readValues_2(int fd){	
+	int readCount;
+	char recieve[BUFFER_SIZE];
+	for(int i=0;i<1000; i++){
+		readCount = read(fd, recieve, BUFFER_SIZE);
+		recieve[readCount]='\0';
+
+		if(readCount < 0){
+			printf("!!Failed reading from device\n");
+			perror("Reading part 3 failed");
+			close(fd);
+			return false;
+			
+		}else{
+
+			if(999==atoi(recieve)){
+				printf("Found 999.\n");
+				return true;
+			} 
+	        
+		}
+	}
+
+	return true;	
+}
+
 int main(){
 
 	int fd;
@@ -100,10 +120,9 @@ int main(){
 	printf("Opening device\n");
 
 	fd = open("/dev/chardev", O_RDWR);
-	printf("[main] value of fd is %d\n", fd);
 	if(fd < 0){
 		printf("Failed opening file\n ");
-		
+		return -1;
 	}
 	else{
 		printf("File opened succesfully\n");
@@ -112,20 +131,19 @@ int main(){
 
 
 	printf("*****Part Two*****\n");
-	printf("Writing strings which contains numbers 0 to 99\n");
-	//success = addValues(fd);
-	//if(!success) return -1;
+	printf("Writing strings which contains numbers 0 to 9\n");
+	success = addValues(fd);
+	if(!success) return -1;
 	printf("***Part Two Complete***\n\n");
 
 	printf("*****Part Three*****\n");
-	printf("Reading strings which should have numbers 0 to 99\n");
-	//success = readValues(fd);
-	//if(!success) return -1;
+	printf("Reading strings which should have numbers 0 to 9\n");
+	success = readValues(fd);
+	if(!success) return -1;
 	printf("***Part Three Complete***\n\n");
 
 
 	printf("*****Part Four*****\n");
-	printf("[part 4] value of fd is %d\n", fd);
 	printf("Writing and reading strings(Concurrency)\n");
 	
 	int *arg = malloc(sizeof(*arg));
@@ -140,6 +158,12 @@ int main(){
   	}
 	
 	printf("***Part Four Complete***\n\n");
-
+	
+	printf("*****Clean Start*****\n");
+	success = readValues_2(fd);
+	if(!success) return -1;
+	close(fd);
+	printf("*****Clean Complete*****\n");
+	
     return 0;
 }
